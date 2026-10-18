@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+streamlit
+requests
+python-dotenv
+python-multipart
+google-genai
+pypdf
+sentence-transformers
+faiss-cpu
+scikit-learn
+pandas
+plotly
+folium
+streamlit-folium
+joblib

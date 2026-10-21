@@ -2,6 +2,29 @@
 
 **An Intelligent Maritime Safety and Incident Decision-Support System**
 
+## Problem Statement
+
+Maritime safety operations face challenges in organizing incident reports, processing maritime documents, and retrieving relevant information quickly. Manual information handling can delay analysis and decision-making. MarineGuard AI aims to address these challenges through an AI-powered application that supports maritime incident reporting, document processing, and question answering to improve information accessibility and operational efficiency.
+
+## Project Objectives
+
+- Develop a system for recording, storing, and retrieving maritime incident reports.
+- Apply AI-based classification to incident descriptions.
+- Support the uploading and processing of maritime documents.
+- Provide AI-assisted question answering for maritime-related information.
+- Demonstrate how AI can support information management and decision-making in maritime safety operations.
+
+## Target Users
+
+- **Coast Guard Personnel:** To organize incident reports and access maritime safety information.
+- **Maritime Safety and Rescue Teams:** To retrieve relevant information supporting incident assessment and rescue coordination.
+- **Maritime Administrators and Analysts:** To review incident records and analyze maritime safety information.
+- **Maritime Researchers and Students:** To explore maritime safety documents and related information.
+
+## Project Scope
+
+MarineGuard AI is a prototype for AI-assisted maritime information management. It focuses on incident management, document processing, incident classification, and question answering. It is intended to support, not replace, professional judgment and established maritime emergency procedures.
+
 ## Overview
 
 MarineGuard AI is an AI-powered prototype that supports maritime information retrieval, incident classification, and incident visualization.

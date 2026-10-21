@@ -57,20 +57,22 @@ def split_text(text: str, chunk_size=900, overlap=150):
 
 
 def index_pdf(pdf_path: str):
-    """Extract PDF text and add its chunks to FAISS."""
+    """Replace the active knowledge base with one PDF."""
 
-    global vector_index
+    global vector_index, chunks, metadata
 
-    reader = PdfReader(pdf_path)
+    pdf_path = Path(pdf_path)
+    reader = PdfReader(str(pdf_path))
     added_chunks = []
 
+    # Extract passages from the newly uploaded PDF.
     for page_number, page in enumerate(reader.pages, start=1):
         page_text = page.extract_text() or ""
 
         for part in split_text(page_text):
             added_chunks.append({
                 "text": part,
-                "source": Path(pdf_path).name,
+                "source": pdf_path.name,
                 "page": page_number,
             })
 
@@ -80,29 +82,44 @@ def index_pdf(pdf_path: str):
             "Scanned PDFs may require OCR."
         )
 
+    # Create embeddings before replacing the active index.
     texts = [item["text"] for item in added_chunks]
 
     vectors = embedding_model.encode(
         texts,
         convert_to_numpy=True,
-        normalize_embeddings=True
+        normalize_embeddings=True,
     ).astype("float32")
 
-    if vector_index is None:
-        vector_index = faiss.IndexFlatIP(vectors.shape[1])
+    new_index = faiss.IndexFlatIP(vectors.shape[1])
+    new_index.add(vectors)
 
-    vector_index.add(vectors)
-
-    chunks.extend(texts)
-    metadata.extend([
+    new_metadata = [
         {
             "source": item["source"],
             "page": item["page"],
         }
         for item in added_chunks
-    ])
+    ]
+
+    # Replace the old active knowledge base.
+    vector_index = new_index
+    chunks = texts
+    metadata = new_metadata
+
+    # Remove older PDFs from the upload directory.
+    for old_pdf in UPLOAD_DIR.glob("*.pdf"):
+        if old_pdf.resolve() != pdf_path.resolve():
+            try:
+                old_pdf.unlink()
+            except OSError as exc:
+                print(
+                    f"Could not remove old PDF "
+                    f"{old_pdf.name}: {exc}"
+                )
 
     return len(added_chunks)
+
 
 
 def search_documents(question: str, top_k=4):
@@ -200,12 +217,30 @@ USER QUESTION:
     }
 
 
-def load_existing_pdfs():
-    """Rebuild the in-memory index from saved PDFs."""
 
-    for pdf_path in sorted(UPLOAD_DIR.glob("*.pdf")):
-        try:
-            index_pdf(str(pdf_path))
-            print(f"Indexed existing PDF: {pdf_path.name}")
-        except Exception as exc:
-            print(f"Could not index {pdf_path.name}: {exc}")
+def load_existing_pdfs():
+    """Load only the most recently modified saved PDF."""
+
+    global vector_index, chunks, metadata
+
+    pdf_files = list(UPLOAD_DIR.glob("*.pdf"))
+
+    if not pdf_files:
+        vector_index = None
+        chunks = []
+        metadata = []
+        print("No previously uploaded PDFs found.")
+        return
+
+    latest_pdf = max(
+        pdf_files,
+        key=lambda path: path.stat().st_mtime,
+    )
+
+    try:
+        index_pdf(str(latest_pdf))
+        print(f"Indexed latest PDF: {latest_pdf.name}")
+    except Exception as exc:
+        print(
+            f"Could not index {latest_pdf.name}: {exc}"
+        )

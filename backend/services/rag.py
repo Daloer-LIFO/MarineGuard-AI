@@ -19,10 +19,24 @@ MODEL_NAME = os.getenv(
     "gemini-3.6-flash"
 )
 
-# Sentence Transformers creates local text embeddings.
-embedding_model = SentenceTransformer(
-    "sentence-transformers/all-MiniLM-L6-v2"
-)
+# The embedding model is loaded only when first needed.
+embedding_model = None
+
+
+def get_embedding_model():
+    """Load the embedding model on its first use."""
+    global embedding_model
+
+    if embedding_model is None:
+        print("Loading Sentence Transformers embedding model...")
+
+        embedding_model = SentenceTransformer(
+            "sentence-transformers/all-MiniLM-L6-v2"
+        )
+
+        print("Embedding model loaded successfully.")
+
+    return embedding_model
 
 # Gemini is used only for answer generation.
 api_key = os.getenv("GEMINI_API_KEY")
@@ -85,7 +99,9 @@ def index_pdf(pdf_path: str):
     # Create embeddings before replacing the active index.
     texts = [item["text"] for item in added_chunks]
 
-    vectors = embedding_model.encode(
+    model = get_embedding_model()
+
+    vectors = model.encode(
         texts,
         convert_to_numpy=True,
         normalize_embeddings=True,
@@ -128,7 +144,9 @@ def search_documents(question: str, top_k=4):
     if vector_index is None or vector_index.ntotal == 0:
         return []
 
-    query_vector = embedding_model.encode(
+    model = get_embedding_model()
+
+    query_vector = model.encode(
         [question],
         convert_to_numpy=True,
         normalize_embeddings=True

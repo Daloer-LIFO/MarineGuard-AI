@@ -28,7 +28,7 @@ app = FastAPI(
 @app.on_event("startup")
 def startup():
     initialize_database()
-    load_existing_pdfs()
+    print("MarineGuard AI startup completed.")
 
 
 class IncidentRequest(BaseModel):
